@@ -46,7 +46,53 @@ def add_student():
         print("Please enter valid data (numbers where required).")
 
 
+def search_student():
+    choice = input("Search by (1) Roll_No or (2) Name: ").strip()
+
+    found = False
+    with open(CSV_FILE, "r") as file:
+        reader = csv.DictReader(file)
+        if choice == "1":
+            try:
+                roll_no = int(input("Enter Roll_No: "))
+                for row in reader:
+                    if int(row["Roll_No"]) == roll_no:
+                        print("Student Found:")
+                        print(row)
+                        found = True
+                        break
+            except ValueError:
+                print("Roll_No must be a number.")
+                return
+
+        elif choice == "2":
+            name_part = input("Enter Name (partial allowed): ").strip().lower()
+            for row in reader:
+                if name_part in row["Name"].lower():
+                    if not found:
+                        print("Matches Found:")
+                    print(row)
+                    found = True
+        else:
+            print("Invalid option. Choose 1 or 2.")
+            return
+
+    if not found:
+        print("No matching record found.")
 if __name__ == "__main__":
-    add_student()
+    while True:
+        print("\n--- Student Management ---")
+        print("1. Add Student (UC1)")
+        print("2. Search Student (UC2)")
+        print("3. Exit")
+        choice = input("Enter choice: ")
 
-
+        if choice == "1":
+            add_student()
+        elif choice == "2":
+            search_student()
+        elif choice == "3":
+            print("Exiting...")
+            break
+        else:
+            print(" Invalid choice. Try again.")
