@@ -1,0 +1,52 @@
+import csv
+import os
+
+CSV_FILE =r"C:\Users\NAVYA SRI\OneDrive\New folder\studentsDetails.csv"
+
+if not os.path.exists(CSV_FILE):
+    with open(CSV_FILE, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            "Roll_No", "Name", "Branch", "Year", "Gender", "Age",
+            "Attendance_%", "Mid1_Marks", "Mid2_Marks", "Quiz_Marks", "Final_Marks"
+        ])
+
+def add_student():
+    try:
+        roll_no = int(input("Enter Roll No: "))
+        name = input("Enter Name: ").strip()
+        branch = input("Enter Branch: ").strip()
+        year = input("Enter Year: ").strip()
+        gender = input("Enter Gender (M/F): ").strip().upper()
+        age = int(input("Enter Age: "))
+        attendance = float(input("Enter Attendance % (0-100): "))
+        mid1 = float(input("Enter Mid1 Marks: "))
+        mid2 = float(input("Enter Mid2 Marks: "))
+        quiz = float(input("Enter Quiz Marks: "))
+        final = float(input("Enter Final Marks: "))
+
+        if not (0 <= attendance <= 100):
+            print(" Attendance must be between 0 and 100")
+            return
+
+        with open(CSV_FILE, "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                if int(row["Roll_No"]) == roll_no:
+                    print("Student with this Roll No already exists.")
+                    return
+
+        with open(CSV_FILE, "a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow([roll_no, name, branch, year, gender, age,
+                             attendance, mid1, mid2, quiz, final])
+        print("Student added successfully!")
+
+    except ValueError:
+        print("Please enter valid data (numbers where required).")
+
+
+if __name__ == "__main__":
+    add_student()
+
+
