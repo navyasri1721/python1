@@ -172,6 +172,120 @@ def delete_student():
 
     except ValueError:
         print("Invalid input. Roll_No must be a number.")
+def generate_report():
+    branch = input("Enter Branch: ").strip()
+    year = input("Enter Year: ").strip()
+
+    students = []
+    with open(CSV_FILE, "r") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if row["Branch"].lower() == branch.lower() and row["Year"].lower() == year.lower():
+                students.append(row)
+
+    if not students:
+        print("No students found for this Branch and Year.")
+        return
+    for row in students:
+        try:
+            row["Final_Marks"] = float(row["Final_Marks"])
+        except ValueError:
+            row["Final_Marks"] = 0.0
+
+    total_students = len(students)
+    avg_marks = sum(s["Final_Marks"] for s in students) / total_students
+    top_student = max(students, key=lambda x: x["Final_Marks"])
+    low_student = min(students, key=lambda x: x["Final_Marks"])
+
+    grades = {"A": 0, "B": 0, "C": 0, "D": 0}
+    for s in students:
+        marks = s["Final_Marks"]
+        if marks >= 90:
+            grades["A"] += 1
+        elif marks >= 75:
+            grades["B"] += 1
+        elif marks >= 50:
+            grades["C"] += 1
+        else:
+            grades["D"] += 1
+
+    print("\n--- Report ---")
+    print(f"Branch: {branch}, Year: {year}")
+    print(f"Total Students: {total_students}")
+    print(f"Class Average: {avg_marks:.2f}")
+    print(f"Topper: {top_student['Name']} ({top_student['Final_Marks']})")
+    print(f"Lowest: {low_student['Name']} ({low_student['Final_Marks']})")
+    print("Grade Distribution:", grades)
+
+    report_file = os.path.join(os.path.dirname(CSV_FILE), f"report_{branch}_{year}.csv")
+    with open(report_file, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Branch", "Year", "Total Students", "Average Marks", "Topper", "Topper Marks",
+                         "Lowest", "Lowest Marks", "Grade A", "Grade B", "Grade C", "Grade D"])
+        writer.writerow([branch, year, total_students, round(avg_marks, 2),
+                         top_student["Name"], top_student["Final_Marks"],
+                         low_student["Name"], low_student["Final_Marks"],
+                         grades["A"], grades["B"], grades["C"], grades["D"]])
+
+    print(f"Report saved as {report_file}")
+def generate_report():
+    branch = input("Enter Branch: ").strip()
+    year = input("Enter Year: ").strip()
+
+    students = []
+    with open(CSV_FILE, "r") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if row["Branch"].lower() == branch.lower() and row["Year"].lower() == year.lower():
+                students.append(row)
+
+    if not students:
+        print("No students found for this Branch and Year.")
+        return
+
+    for row in students:
+        try:
+            row["Final_Marks"] = float(row["Final_Marks"])
+        except ValueError:
+            row["Final_Marks"] = 0.0
+
+    total_students = len(students)
+    avg_marks = sum(s["Final_Marks"] for s in students) / total_students
+    top_student = max(students, key=lambda x: x["Final_Marks"])
+    low_student = min(students, key=lambda x: x["Final_Marks"])
+
+    grades = {"A": 0, "B": 0, "C": 0, "D": 0}
+    for s in students:
+        marks = s["Final_Marks"]
+        if marks >= 90:
+            grades["A"] += 1
+        elif marks >= 75:
+            grades["B"] += 1
+        elif marks >= 50:
+            grades["C"] += 1
+        else:
+            grades["D"] += 1
+
+    print("\n--- Report ---")
+    print(f"Branch: {branch}, Year: {year}")
+    print(f"Total Students: {total_students}")
+    print(f"Class Average: {avg_marks:.2f}")
+    print(f"Topper: {top_student['Name']} ({top_student['Final_Marks']})")
+    print(f"Lowest: {low_student['Name']} ({low_student['Final_Marks']})")
+    print("Grade Distribution:", grades)
+
+    report_file = os.path.join(os.path.dirname(CSV_FILE), f"report_{branch}_{year}.csv")
+    with open(report_file, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Branch", "Year", "Total Students", "Average Marks", "Topper", "Topper Marks",
+                         "Lowest", "Lowest Marks", "Grade A", "Grade B", "Grade C", "Grade D"])
+        writer.writerow([branch, year, total_students, round(avg_marks, 2),
+                         top_student["Name"], top_student["Final_Marks"],
+                         low_student["Name"], low_student["Final_Marks"],
+                         grades["A"], grades["B"], grades["C"], grades["D"]])
+
+    print(f"Report saved as {report_file}")
+
 if __name__ == "__main__":
     while True:
         print("\n--- Student Management ---")
@@ -179,7 +293,8 @@ if __name__ == "__main__":
         print("2. Search Student (UC2)")
         print("3. Update Student (UC3)")
         print("4. Delete Student (UC4)")
-        print("5. Exit")
+        print("5. Generate Report (UC5)")
+        print("6. Exit")
         choice = input("Enter choice: ")
 
         if choice == "1":
@@ -191,10 +306,15 @@ if __name__ == "__main__":
         elif choice == "4":
             delete_student()
         elif choice == "5":
+            generate_report()
+        elif choice == "6":
             print("Exiting...")
             break
         else:
             print("Invalid choice. Try again.")
+
+
+
 
 
 
