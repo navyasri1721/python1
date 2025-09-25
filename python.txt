@@ -228,64 +228,70 @@ def generate_report():
                          grades["A"], grades["B"], grades["C"], grades["D"]])
 
     print(f"Report saved as {report_file}")
-def generate_report():
-    branch = input("Enter Branch: ").strip()
-    year = input("Enter Year: ").strip()
 
-    students = []
-    with open(CSV_FILE, "r") as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            if row["Branch"].lower() == branch.lower() and row["Year"].lower() == year.lower():
-                students.append(row)
+def bulk_import():
+    file_path = input("Enter the path of the CSV file to import: ").strip()
 
-    if not students:
-        print("No students found for this Branch and Year.")
+    if not os.path.exists(file_path):
+        print("File not found. Please check the path.")
         return
 
-    for row in students:
-        try:
-            row["Final_Marks"] = float(row["Final_Marks"])
-        except ValueError:
-            row["Final_Marks"] = 0.0
+    imported_count = 0
+    skipped_count = 0
+    errors = []
 
-    total_students = len(students)
-    avg_marks = sum(s["Final_Marks"] for s in students) / total_students
-    top_student = max(students, key=lambda x: x["Final_Marks"])
-    low_student = min(students, key=lambda x: x["Final_Marks"])
+    with open(file_path, "r") as infile, open(CSV_FILE, "a", newline="") as outfile:
+        reader = csv.DictReader(infile)
+        writer = csv.writer(outfile)
 
-    grades = {"A": 0, "B": 0, "C": 0, "D": 0}
-    for s in students:
-        marks = s["Final_Marks"]
-        if marks >= 90:
-            grades["A"] += 1
-        elif marks >= 75:
-            grades["B"] += 1
-        elif marks >= 50:
-            grades["C"] += 1
-        else:
-            grades["D"] += 1
+        existing_rolls = set()
+        with open(CSV_FILE, "r") as f:
+            existing_reader = csv.DictReader(f)
+            for row in existing_reader:
+                existing_rolls.add(int(row["Roll_No"]))
 
-    print("\n--- Report ---")
-    print(f"Branch: {branch}, Year: {year}")
-    print(f"Total Students: {total_students}")
-    print(f"Class Average: {avg_marks:.2f}")
-    print(f"Topper: {top_student['Name']} ({top_student['Final_Marks']})")
-    print(f"Lowest: {low_student['Name']} ({low_student['Final_Marks']})")
-    print("Grade Distribution:", grades)
+        for i, row in enumerate(reader, start=2):  # start=2 because line 1 is header
+            try:
+                roll_no = int(row["Roll_No"])
+                if roll_no in existing_rolls:
+                    errors.append((i, "Duplicate Roll_No"))
+                    skipped_count += 1
+                    continue
 
-    report_file = os.path.join(os.path.dirname(CSV_FILE), f"report_{branch}_{year}.csv")
-    with open(report_file, "w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow(["Branch", "Year", "Total Students", "Average Marks", "Topper", "Topper Marks",
-                         "Lowest", "Lowest Marks", "Grade A", "Grade B", "Grade C", "Grade D"])
-        writer.writerow([branch, year, total_students, round(avg_marks, 2),
-                         top_student["Name"], top_student["Final_Marks"],
-                         low_student["Name"], low_student["Final_Marks"],
-                         grades["A"], grades["B"], grades["C"], grades["D"]])
+                name = row["Name"].strip()
+                branch = row["Branch"].strip()
+                year = row["Year"].strip()
+                gender = row["Gender"].strip().upper()
+                age = int(row["Age"])
+                attendance = float(row["Attendance_%"])
+                mid1 = float(row["Mid1_Marks"])
+                mid2 = float(row["Mid2_Marks"])
+                quiz = float(row["Quiz_Marks"])
+                final = float(row["Final_Marks"])
 
-    print(f"Report saved as {report_file}")
+                if not (0 <= attendance <= 100):
+                    errors.append((i, "Invalid Attendance"))
+                    skipped_count += 1
+                    continue
 
+                writer.writerow([roll_no, name, branch, year, gender, age,
+                                 attendance, mid1, mid2, quiz, final])
+                existing_rolls.add(roll_no)
+                imported_count += 1
+
+            except Exception as e:
+                errors.append((i, str(e)))
+                skipped_count += 1
+
+    if errors:
+        error_file = os.path.join(os.path.dirname(CSV_FILE), "import_errors.csv")
+        with open(error_file, "w", newline="") as ef:
+            ew = csv.writer(ef)
+            ew.writerow(["Line", "Error"])
+            ew.writerows(errors)
+        print(f"Errors logged to {error_file}")
+
+    print(f"Bulk Import Completed: {imported_count} records imported, {skipped_count} skipped.")
 if __name__ == "__main__":
     while True:
         print("\n--- Student Management ---")
@@ -294,7 +300,8 @@ if __name__ == "__main__":
         print("3. Update Student (UC3)")
         print("4. Delete Student (UC4)")
         print("5. Generate Report (UC5)")
-        print("6. Exit")
+        print("6. Bulk Import (UC6)")
+        print("7. Exit")
         choice = input("Enter choice: ")
 
         if choice == "1":
@@ -308,10 +315,15 @@ if __name__ == "__main__":
         elif choice == "5":
             generate_report()
         elif choice == "6":
+            bulk_import()
+        elif choice == "7":
             print("Exiting...")
             break
         else:
             print("Invalid choice. Try again.")
+
+
+
 
 
 
